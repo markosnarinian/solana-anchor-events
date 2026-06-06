@@ -1,0 +1,21 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "pumpfun_anchor"
+version = "0.1.0"
+description = "Generic Anchor 0.30+ event decoder for Solana transaction logs (Rust/PyO3)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Operating System :: OS Independent",
+]
+
+[tool.maturin]
+# Build an abi3 extension module. The single abi3-py39 wheel works on any
+# CPython >= 3.9.
+features = ["pyo3/extension-module"]

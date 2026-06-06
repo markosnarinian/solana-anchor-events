@@ -1,0 +1,23 @@
+[package]
+name = "pumpfun_anchor"
+version = "0.1.0"
+edition = "2021"
+description = "Generic Anchor 0.30+ Solana event log decoder (Rust/PyO3)."
+license = "MIT"
+
+[lib]
+name = "pumpfun_anchor"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# `extension-module` is intentionally NOT enabled here so that `cargo test` can
+# link libpython for the (Python-free) unit tests. maturin turns it on for the
+# wheel build via the `[tool.maturin] features` list in pyproject.toml.
+pyo3 = { version = "0.28", features = ["abi3-py39"] }
+anchor-lang-idl = { version = "0.1.2", features = ["convert"] }
+base64 = "0.22"
+bs58 = "0.5"
+
+[features]
+# Enabled by maturin for the cdylib wheel; left off for `cargo test`.
+extension-module = ["pyo3/extension-module"]
