@@ -1,4 +1,4 @@
-"""End-to-end tests for the pumpfun_anchor event decoder.
+"""End-to-end tests for the solana_anchor_events event decoder.
 
 The TradeEvent round-trip reads the discriminator and the field order/types
 straight from the IDL JSON, so the test cannot silently drift from the schema:
@@ -13,7 +13,7 @@ import struct
 
 import pytest
 
-from pumpfun_anchor import EventDecoder
+from solana_anchor_events import EventDecoder
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 IDL_PATH = os.path.join(HERE, "pumpfun.json")

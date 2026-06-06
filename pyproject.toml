@@ -3,19 +3,27 @@ requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "pumpfun_anchor"
+name = "solana-anchor-events"
 version = "0.1.0"
-description = "Generic Anchor 0.30+ event decoder for Solana transaction logs (Rust/PyO3)."
+description = "Decode Anchor 0.30+ program events from Solana transaction logs, using only the IDL."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
+keywords = ["solana", "anchor", "borsh", "idl", "events", "blockchain"]
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
     "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries",
+    "License :: OSI Approved :: MIT License",
 ]
 
+[project.urls]
+Repository = "https://github.com/markosnarinian/solana-anchor-events"
+
 [tool.maturin]
+# The import name (valid Python identifier) differs from the distribution name.
+module-name = "solana_anchor_events"
 # Build an abi3 extension module. The single abi3-py39 wheel works on any
 # CPython >= 3.9.
 features = ["pyo3/extension-module"]

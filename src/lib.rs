@@ -160,11 +160,7 @@ impl EventDecoder {
     /// Lines that are not events, fail to base64-decode, match no known
     /// discriminator, or fail to Borsh-decode are silently skipped. Never
     /// raises over a batch.
-    fn parse_logs<'py>(
-        &self,
-        py: Python<'py>,
-        logs: Vec<String>,
-    ) -> PyResult<Bound<'py, PyList>> {
+    fn parse_logs<'py>(&self, py: Python<'py>, logs: Vec<String>) -> PyResult<Bound<'py, PyList>> {
         let out = PyList::empty(py);
         for line in logs {
             let payload = match line
@@ -226,7 +222,8 @@ impl EventDecoder {
                 let dict = PyDict::new(py);
                 for field in named {
                     let value = self.decode_type(py, cur, &field.ty)?;
-                    dict.set_item(&field.name, value).map_err(|e| e.to_string())?;
+                    dict.set_item(&field.name, value)
+                        .map_err(|e| e.to_string())?;
                 }
                 Ok(dict.into_any())
             }
@@ -361,9 +358,9 @@ impl EventDecoder {
     }
 }
 
-/// The Python module: `pumpfun_anchor`.
+/// The Python module: `solana_anchor_events`.
 #[pymodule]
-fn pumpfun_anchor(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn solana_anchor_events(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<EventDecoder>()?;
     Ok(())
 }

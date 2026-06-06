@@ -1,33 +1,155 @@
-# pumpfun_anchor
+# solana-anchor-events
 
-A small, dependency-light Python extension (Rust + PyO3) that decodes
-**Anchor 0.30+** program events out of Solana transaction log lines into plain
-Python objects. No `anchorpy` dependency and no code generation — the decoder
-parses an Anchor IDL (spec `0.1.0`) at runtime with the official
-`anchor-lang-idl` crate and walks the `IdlType` tree to Borsh-decode event bytes
-directly into dicts.
+Decode **Anchor 0.30+** program events from Solana transaction logs into plain
+Python objects — using **only the program's IDL**, with no code generation and
+no `anchorpy`.
 
-It is generic for any Anchor 0.30 IDL; pump.fun is just the tested target.
+Solana programs built with [Anchor](https://www.anchor-lang.com/) emit events
+into a transaction's log output as opaque, base64-encoded
+[Borsh](https://borsh.io/) blobs prefixed by an 8-byte discriminator:
+
+```
+Program data: vdt/007mYe69238...
+```
+
+Normally you need that specific program's generated client to read them. This
+package instead parses the program's IDL (the JSON schema Anchor produces) at
+runtime and walks its type tree to decode any event it describes. It is generic
+for **any** Anchor 0.30+ program.
+
+The decoder is implemented in Rust (via [PyO3](https://pyo3.rs/)) for speed and
+correctness, and ships as a single `abi3` wheel that works on any CPython ≥ 3.9.
+
+## Installation
+
+```bash
+pip install solana-anchor-events
+```
+
+> The import name uses underscores: `import solana_anchor_events`.
+
+### Building from source
+
+Requires a Rust toolchain and [maturin](https://www.maturin.rs/):
+
+```bash
+pip install maturin
+maturin build --release      # wheel under target/wheels/
+# or, for local development:
+maturin develop
+```
 
 ## Usage
 
+Give the decoder the IDL JSON once, then feed it the program log lines from any
+transaction. You get back a list of `(event_name, data)` tuples, where `data`
+is a `dict` of the event's fields.
+
 ```python
-from pumpfun_anchor import EventDecoder
+from solana_anchor_events import EventDecoder
 
-dec = EventDecoder(open("pumpfun.json").read())   # raw IDL JSON
-events = dec.parse_logs(tx_log_lines)              # -> list[tuple[str, dict]]
-print(dec.event_names)                             # e.g. ["TradeEvent", ...]
+# 1. Build a decoder from the program's IDL (read once, reuse).
+with open("pumpfun.json") as f:
+    decoder = EventDecoder(f.read())
+
+print(decoder.event_names)
+# ['TradeEvent', 'CreateEvent', ...]
+
+# 2. Decode the log lines from a transaction.
+logs = [
+    "Program data: vdt/007mYe69...",   # base64 Anchor event
+    "Program log: Instruction: Buy",   # ignored (not an event)
+]
+for name, data in decoder.parse_logs(logs):
+    print(name, data)
+# TradeEvent {'mint': '7xKX...', 'sol_amount': 1000000, 'is_buy': True, ...}
 ```
 
-`parse_logs` accepts the program log lines (each like `"Program data: <base64>"`
-or `"Program log: <base64>"`), skips anything that is not a recognizable event,
-and never raises over a batch.
+### Getting the log lines
 
-## Build
+`parse_logs` expects the raw log message strings as returned by an RPC node — the
+`logMessages` array from `getTransaction`, or the `logs` field of a `logsSubscribe`
+notification. Lines that are not events are skipped automatically.
 
-```bash
-maturin develop          # build + install into the active venv
-maturin build --release  # produce a wheel under target/wheels/
+```python
+import json, urllib.request
+
+req = urllib.request.Request(
+    "https://api.mainnet-beta.solana.com",
+    data=json.dumps({
+        "jsonrpc": "2.0", "id": 1, "method": "getTransaction",
+        "params": [signature, {"encoding": "json", "maxSupportedTransactionVersion": 0}],
+    }).encode(),
+    headers={"Content-Type": "application/json"},
+)
+tx = json.load(urllib.request.urlopen(req))
+logs = tx["result"]["meta"]["logMessages"]
+
+events = decoder.parse_logs(logs)
 ```
 
-The wheel is `abi3-py39`, so a single artifact works on any CPython >= 3.9.
+## API
+
+### `EventDecoder(idl_json: str)`
+
+Construct a decoder from an Anchor IDL JSON string (spec `0.1.0`, i.e. Anchor
+0.30+). Raises `ValueError` if the IDL cannot be parsed or is unsupported.
+
+### `EventDecoder.parse_logs(logs: Sequence[str]) -> list[tuple[str, dict]]`
+
+Decode every recognizable event from a batch of program log lines, in order.
+Each line is handled as follows:
+
+- Lines without a `Program data: ` or `Program log: ` prefix are skipped.
+- The remainder is base64-decoded; lines that fail to decode are skipped.
+- The first 8 bytes are matched against each event's discriminator; non-matches
+  are skipped.
+- The remaining bytes are Borsh-decoded per the IDL. If decoding fails, that
+  event is skipped.
+
+**This method never raises over a batch** — malformed or unrelated lines are
+simply ignored, so you can feed it a whole transaction's logs safely.
+
+### `EventDecoder.event_names -> list[str]`
+
+The names of all events declared in the IDL, in declaration order.
+
+## Type mapping
+
+| IDL type | Python type |
+|---|---|
+| `bool` | `bool` |
+| `u8`–`u128`, `i8`–`i128` | `int` |
+| `u256` / `i256` | `int` (best effort) |
+| `f32` / `f64` | `float` |
+| `string` | `str` |
+| `bytes` | `bytes` |
+| `pubkey` | `str` (base58) |
+| `option<T>` | `T` or `None` |
+| `vec<T>` / `array<T, N>` | `list` |
+| defined struct (named fields) | `dict` |
+| defined struct (tuple fields) | `list` |
+| defined enum (unit variant) | `str` (variant name) |
+| defined enum (data variant) | `{variant_name: <fields>}` |
+
+Events whose fields use **generics** are skipped rather than decoded.
+
+## Compatibility
+
+- Anchor IDL **spec 0.1.0** (Anchor 0.30 and later).
+- CPython **≥ 3.9** (single `abi3` wheel).
+
+## AI disclaimer
+
+**This software was written by AI.** The implementation, tests, and this
+documentation were generated by an AI coding assistant. It
+has an automated test suite (a full Rust ↔ Python event round-trip plus Rust
+unit tests) and has been run against a real pump.fun IDL, but it has **not** been
+independently audited by a human. Review it yourself before relying on it in
+production, and treat decoded values as untrusted until you've validated them
+against your own expectations.
+
+
+## License
+
+MIT

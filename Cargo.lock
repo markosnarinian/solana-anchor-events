@@ -156,16 +156,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pumpfun_anchor"
-version = "0.1.0"
-dependencies = [
- "anchor-lang-idl",
- "base64",
- "bs58",
- "pyo3",
-]
-
-[[package]]
 name = "pyo3"
 version = "0.28.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -284,6 +274,16 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "solana-anchor-events"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang-idl",
+ "base64",
+ "bs58",
+ "pyo3",
 ]
 
 [[package]]

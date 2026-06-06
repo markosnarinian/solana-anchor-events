@@ -1,12 +1,13 @@
 [package]
-name = "pumpfun_anchor"
+name = "solana-anchor-events"
 version = "0.1.0"
 edition = "2021"
-description = "Generic Anchor 0.30+ Solana event log decoder (Rust/PyO3)."
+description = "Decode Anchor 0.30+ program events from Solana transaction logs, using only the IDL."
 license = "MIT"
+repository = "https://github.com/markosnarinian/solana-anchor-events"
 
 [lib]
-name = "pumpfun_anchor"
+name = "solana_anchor_events"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
