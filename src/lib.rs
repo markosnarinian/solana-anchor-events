@@ -358,9 +358,9 @@ impl EventDecoder {
     }
 }
 
-/// The Python module: `solana_anchor_events`.
+/// The compiled extension module: `solana_anchor_events._solana_anchor_events`.
 #[pymodule]
-fn solana_anchor_events(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _solana_anchor_events(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<EventDecoder>()?;
     Ok(())
 }

@@ -7,7 +7,9 @@ license = "MIT"
 repository = "https://github.com/markosnarinian/solana-anchor-events"
 
 [lib]
-name = "solana_anchor_events"
+# Compiled extension is a private submodule; the public `solana_anchor_events`
+# package (python/) re-exports it and carries the type stubs.
+name = "_solana_anchor_events"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]

@@ -22,8 +22,10 @@ classifiers = [
 Repository = "https://github.com/markosnarinian/solana-anchor-events"
 
 [tool.maturin]
-# The import name (valid Python identifier) differs from the distribution name.
-module-name = "solana_anchor_events"
+# Mixed layout: pure-Python package under python/ wraps the compiled submodule
+# and ships the PEP 561 type stubs (.pyi + py.typed).
+python-source = "python"
+module-name = "solana_anchor_events._solana_anchor_events"
 # Build an abi3 extension module. The single abi3-py39 wheel works on any
 # CPython >= 3.9.
 features = ["pyo3/extension-module"]
