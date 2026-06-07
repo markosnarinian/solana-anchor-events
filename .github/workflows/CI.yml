@@ -77,7 +77,9 @@ jobs:
         uses: uraimo/run-on-arch-action@v2
         with:
           arch: ${{ matrix.platform.target }}
-          distro: ubuntu24.04
+          # run-on-arch-action@v2 ships no ubuntu24.04 Dockerfile for these
+          # arches; ubuntu22.04 exists for aarch64/armv7/s390x/ppc64le.
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           install: |
             apt-get update
