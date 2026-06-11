@@ -383,7 +383,7 @@ mod tests {
 
     #[test]
     fn cursor_reads_borsh_string() {
-        let text = "pumpfun events";
+        let text = "foo";
         let mut buf = Vec::new();
         buf.extend_from_slice(&(text.len() as u32).to_le_bytes());
         buf.extend_from_slice(text.as_bytes());
